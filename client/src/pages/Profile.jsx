@@ -1,11 +1,12 @@
 import { useSelector } from "react-redux";
 import { useRef, useState, useEffect } from "react";
-import {
+/*import {
   getStorage,
   ref,
   getDownloadURL,
   uploadBytesResumable,
 } from "firebase/storage";
+ */
 import {
   updateUserStart,
   updateUserSuccess,
@@ -16,8 +17,9 @@ import {
   signOutUserStart,
 } from "../redux/user/userSlice";
 import { useDispatch } from "react-redux";
-import { app } from "../firebase";
+//import { app } from "../firebase";
 import { Link } from "react-router-dom";
+import { supabase } from "../supabase";
 
 export default function Profile() {
   const fileRef = useRef(null);
@@ -44,8 +46,60 @@ export default function Profile() {
     }
   }, [file]); //file
 
-  const handleFileUpload = (file) => {
-    const storage = getStorage(app);
+  const handleFileUpload = async (file) => {
+    const fileName = `${Date.now()}_${file.name}`;
+
+    try {
+      // Track file progress manually (Supabase doesn't provide real-time events)
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(file);
+
+      reader.onload = async () => {
+        const fileBuffer = reader.result;
+
+        const { data, error } = await supabase.storage
+          .from("images")
+          .upload(fileName, fileBuffer, {
+            contentType: file.type,
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        if (error) {
+          console.error("Upload error:", error.message);
+          setFileUploadError(true);
+          return;
+        }
+
+        // Get the public URL after upload
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("images").getPublicUrl(fileName);
+
+        setFormData((prev) => ({
+          ...prev,
+          avatar: publicUrl, // Or imageUrls: [...prev.imageUrls, publicUrl]
+        }));
+
+        setFilePerc(100);
+        setFileUploadError(false);
+      };
+
+      // Simulate upload progress (since Supabase lacks built-in progress events)
+      reader.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          setFilePerc(percent);
+        }
+      };
+    } catch (err) {
+      console.error("Unexpected error during upload:", err);
+      setFileUploadError(true);
+    }
+  };
+
+  /*const handleFileUpload = (file) => {
+    const storage = getStorage(supabase); //app
     const fileName = new Date().getTime() + file.name;
     const storageRef = ref(storage, fileName);
     const uploadTask = uploadBytesResumable(storageRef, file);
@@ -68,6 +122,7 @@ export default function Profile() {
       }
     );
   };
+  */
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -124,7 +179,7 @@ export default function Profile() {
       }
       dispatch(deleteUserSuccess(data));
     } catch (error) {
-      dispatch(deleteUserFailure(error.message));
+      dispatch(deleteUserFailure(data.message));
       //data
     }
   };
@@ -284,8 +339,8 @@ export default function Profile() {
                 >
                   Delete
                 </button>
-                     <Link to={`/update-listing/${listing._id}`}>
-                  <button className='text-green-700 uppercase'>Edit</button>
+                <Link to={`/update-listing/${listing._id}`}>
+                  <button className="text-green-700 uppercase">Edit</button>
                 </Link>
               </div>
             </div>

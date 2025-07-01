@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { app } from "../firebase";
-import {
+//import { app } from "../firebase";
+/*import {
   getStorage,
   getDownloadURL,
   ref,
   uploadBytesResumable,
 } from "firebase/storage";
+*/
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../supabase";
 
 export default function CreateListing() {
   const { currentUser } = useSelector((state) => state.user);
@@ -33,7 +35,6 @@ export default function CreateListing() {
     parking: false,
     furnished: false,
   });
-  console.log(formData);
 
   const handleImageSubmit = (e) => {
     if (files.length > 0 && files.length + formData.imageUrls.length < 7) {
@@ -62,10 +63,55 @@ export default function CreateListing() {
       setImageUploadError("You can only upload 6 images per listing");
       setUploading(false);
     }
+  };
 
-    const storeImage = async (file) => {
+  
+
+  const storeImage = async (file, onProgress) => {
+    return new Promise( (resolve, reject) => {//async
+      try {
+        const fileName = `${Date.now()}-${file.name}`;
+        const filePath = `images/${fileName}`;
+
+        // Supabase does not support upload progress directly.
+        // So, we manually track it with a FileReader (approximate).
+        const reader = new FileReader();
+        reader.onprogress = (event) => {
+          if (event.lengthComputable && onProgress) {
+            const progress = (event.loaded / event.total) * 100;
+            onProgress(Math.round(progress));
+          }
+        };
+
+        reader.onloadend = async () => {
+          const { data , error: uploadError } = await supabase.storage
+          //data
+            .from("images")
+            .upload(filePath, file);
+
+          if (uploadError) return reject(uploadError);
+
+          const { data: urlData } = supabase.storage
+            .from("images")
+            .getPublicUrl(filePath);
+
+          resolve(urlData.publicUrl);
+        };
+
+        reader.onerror = (error) => {
+          reject(error);
+        };
+
+        reader.readAsArrayBuffer(file); // triggers onprogress and onloadend
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+
+  /*const storeImage = async (file) => {
       return new Promise((resolve, reject) => {
-        const storage = getStorage(app);
+        const storage = getStorage(supabase); //app
         const fileName = new Date().getTime() + file.name;
         const storageRef = ref(storage, fileName);
         const uploadTask = uploadBytesResumable(storageRef, file);
@@ -87,7 +133,7 @@ export default function CreateListing() {
         );
       });
     };
-  };
+    */
 
   const handleRemoveImage = (index) => {
     setFormData({
