@@ -5,6 +5,7 @@ import userRouter from "./routes/user.route.js";
 import authRouter from "./routes/auth.route.js";
 import listingRouter from "./routes/listing.route.js";
 import cookieParser from "cookie-parser";
+import serverless from "serverless-http";
 dotenv.config();
 mongoose
   .connect(process.env.MONGO)
@@ -36,3 +37,5 @@ app.use((err, req, res, next) => {
     message,
   });
 });
+
+export const handler = serverless(app);
