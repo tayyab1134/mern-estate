@@ -17,13 +17,14 @@ mongoose
     console.log(err);
   });
 
+app.get('/', (req, res) => {
+  res.send({ activeStatus: true, error: false });
+});
+
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-app.listen(3000, () => {
-  console.log("Server is running on port 3000!");
-});
 
 app.use("/api/user", userRouter);
 app.use("/api/auth", authRouter);
@@ -38,3 +39,5 @@ app.use((err, req, res, next) => {
     message,
   });
 });
+
+export default app;
