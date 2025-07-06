@@ -1,0 +1,1 @@
+export const backend_url = 'https://mern-estate-sxhl.vercel.app/api'
