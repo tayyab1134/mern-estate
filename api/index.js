@@ -26,9 +26,7 @@ app.listen(3000, () => {
 });
 
 
-app.get('/', (req, res) => {
-  res.send('🚀 Deployment Successful! Welcome to your Vercel App.');
-});
+
 
 app.use("/api/user", userRouter);
 app.use("/api/auth", authRouter);
