@@ -4,7 +4,7 @@ import { useDispatch } from "react-redux";
 import { signInSuccess } from "../redux/user/userSlice";
 import { useNavigate } from "react-router-dom";
 
-export default function OAuth() {
+ function OAuth() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -13,7 +13,7 @@ export default function OAuth() {
       const provider = new GoogleAuthProvider();
       const auth = getAuth(app);
       const result = await signInWithPopup(auth, provider);
-      const res = await fetch("/api/auth/google", {
+      const res = await fetch("https://backend-mernestate.vercel.app/api/auth/google", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -42,3 +42,4 @@ export default function OAuth() {
     </button>
   );
 }
+export default OAuth;
