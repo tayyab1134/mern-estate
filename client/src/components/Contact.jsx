@@ -8,19 +8,18 @@ const Contact = ({ listing }) => {
     setMessage(e.target.value);
   }
 
-  useEffect(() => {
-    const fetchLandLord = async () => {
+ useEffect(() => {
+    const fetchLandlord = async () => {
       try {
-        const response = await fetch(`https://backend-mernestate.vercel.app/api/user/${listing.userRef}`);
-        const jsonData = await response.json();
-        setLandLord(jsonData);
-      } catch (e) {
-        console.log(e.message);
+        const res = await fetch(`/api/user/${listing.userRef}`);
+        const data = await res.json();
+        setLandlord(data);
+      } catch (error) {
+        console.log(error);
       }
     };
-
-    fetchLandLord();
-  }, []);
+    fetchLandlord();
+  }, [listing.userRef]);
 
   return (
     <div className="flex flex-col gap-2">
