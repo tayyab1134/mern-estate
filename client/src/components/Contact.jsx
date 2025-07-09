@@ -11,7 +11,7 @@ const Contact = ({ listing }) => {
  useEffect(() => {
     const fetchLandlord = async () => {
       try {
-        const res = await fetch(`/api/user/${listing.userRef}`);
+        const res = await fetch(`https://backend-mernestate.vercel.app/api/user/${listing.userRef}`);
         const data = await res.json();
         setLandlord(data);
       } catch (error) {
